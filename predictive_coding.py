@@ -14,6 +14,10 @@ class PEUnit:
         self.r = np.zeros((r_size))
         self.U = np.random.rand(I_size, r_size)
         self.V = np.random.rand(r_size, r_size)
+        # Why is python like this... It takes different arguments to create x and U,
+        # r doesn't have a direction because you can multiply it with itself and also it's transpose
+        # but at the same time it does because it is emplicitly treated as a (r_size, 1, 1, 1...) array
+        #Maybe we should just define it as self.r = np.zeros((r_size), 1) so that it's clearer
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
@@ -34,23 +38,26 @@ class PEUnit:
         # this is now self.r so i don't need to calculate it so many times
         # est_r = np.matmul(self.V, self.r) # this should be passed through a nonlinearity
         # error from bottom-up
-        err_bu = I - np.matmul(self.U, self.r)
+        err_bu = I - np.matmul(self.U, self.r) #1x1
         # r-hat post-Kalman filter
         r_hat = (self.r
-                 + self.alpha * (self.U.T * err_bu)
-                 + self.beta * err_td
+                 + self.alpha * (self.U.T * err_bu) #5x1
+                 + self.beta * err_td #Is this just a number? Should it be?
                  - self.gamma * self.r)
 
         # transition matrix from previous timestep to now
         new_V = self.V + self.epsilon * np.matmul( (r_hat - self.r), r_hat.T ) - self.eta
         # weights; i'm not sure why we give this r-hat rather than r', just that they do in the paper
-        new_U = self.U + self.zeta * ( (I - np.matmul(self.U, r_hat) ) * r_hat.T ) - self.theta
+        new_U = self.U + self.zeta * ( (I - np.matmul(self.U, r_hat)) * r_hat.T ) - self.theta
 
         self.r = np.matmul(self.V, r_hat) # we should still probably pass this through a nonlinearity
         self.V = new_V
         self.U = new_U
 
         print("U =",self.U) # this is printing a 5x5 matrix. why?
+        # I don't know... It should be 1x5, I haven't run the code but the math should be right.
+        # I'd be currios what the dimensions of r_hat is because it might be a vector and might be a 5x1 matrix.
+        # If it's a vector then it might cause issues? 
         print("V =",self.V)
         print("r =",self.r)
 
