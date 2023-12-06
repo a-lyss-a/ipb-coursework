@@ -1,16 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 
 
 def main(args):
-    pass
+    myNetwork = Network()
+    myNetwork.forward(1000)
     
 
 class PEUnit:
     def __init__(self, r_size, I_size, alpha, beta, gamma, epsilon, zeta, eta, theta):
         
         self.r = np.zeros((r_size))
-        self.U = np.random.rand(I_size, r_size)
+        self.U = np.random.rand(r_size, I_size) # i think this might be wrong
         self.V = np.random.rand(r_size, r_size)
         self.alpha = alpha
         self.beta = beta
@@ -32,7 +34,7 @@ class PEUnit:
         # this is now self.r so i don't need to calculate it so many times
         # est_r = np.matmul(self.V, self.r) # this should be passed through a nonlinearity
         # error from bottom-up
-        err_bu = I - np.matmul(self.U * self.r)
+        err_bu = I - np.matmul(self.U, self.r)
         # r-hat post-Kalman filter
         r_hat = (self.r
                  + self.alpha * (self.U.T * err_bu)
@@ -48,12 +50,16 @@ class PEUnit:
         self.V = new_V
         self.U = new_U
 
+        print("U =",self.U)
+        print("V =",self.V)
+        print("r =",self.r)
+
         # we need to output predictions to hand forwards, errors to hand backwards
         return self.predict(), err_bu
     
     # generate a prediction
     def predict(self):
-        return (self.U * self.r)
+        return np.matmul(self.U, self.r)
 
         
 # for arranging and running the network
@@ -64,8 +70,8 @@ class Network:
         # noise generator
         self.noise = np.random.default_rng()
         # define the units and their outputs
-        self.layer1 = [PEUnit(5, 1, 0.1, 0.1, 0.1)]
-        self.layer2 = [PEUnit(5, 1, 0.1, 0.1, 0.1)]
+        self.layer1 = [PEUnit(5, 1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)]
+        self.layer2 = [PEUnit(5, 1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)]
 
     def generate_input(self):
         return np.sin(self.step) + self.noise.normal(scale=0.05)
@@ -74,11 +80,12 @@ class Network:
     def forward(self, steps):
         # outputs to be given to the next layers
         # THIS WILL HAVE TO BE CHANGED FOR MULTITHREADING
-        errs_21 = []
-        preds_12 = []
-        errs_32 = []
-        preds_23 = []
-        while self.steps < steps:
+        # initialise everything
+        errs_21 = [0]
+        preds_12 = [0]
+        errs_32 = [0]
+        preds_23 = [0]
+        while self.step < steps:
             
             # if r(t) = [0] then i guess our first real r is 1
             self.step += 1
@@ -91,9 +98,14 @@ class Network:
                 preds_12[i], _ = self.layer1[i].update(It, errs_21[i])
 
             # ideally, you wouldn't be doing this step-by-step, but i guess this works for now
+            print("layer 2")
 
             # hand predictions up and errors down
             for i in range(len(self.layer2)):
-                preds_23, self.layer2[i].update(preds_12[i], errs_32[i])
-        
-        return preds_23
+                preds_23[i], errs_21[i] = self.layer2[i].update(preds_12[i], errs_32[i])
+
+            if self.step % 10 == 0:
+                print(f"input: {It}, layer1: {preds_12}, layer2: {preds_23}")
+
+# i forgot how the shell works
+main(1)
