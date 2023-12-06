@@ -12,7 +12,7 @@ class PEUnit:
     def __init__(self, r_size, I_size, alpha, beta, gamma, epsilon, zeta, eta, theta):
         
         self.r = np.zeros((r_size))
-        self.U = np.random.rand(r_size, I_size) # i think this might be wrong
+        self.U = np.random.rand(I_size, r_size)
         self.V = np.random.rand(r_size, r_size)
         self.alpha = alpha
         self.beta = beta
@@ -50,7 +50,7 @@ class PEUnit:
         self.V = new_V
         self.U = new_U
 
-        print("U =",self.U)
+        print("U =",self.U) # this is printing a 5x5 matrix. why?
         print("V =",self.V)
         print("r =",self.r)
 
@@ -105,6 +105,7 @@ class Network:
                 preds_23[i], errs_21[i] = self.layer2[i].update(preds_12[i], errs_32[i])
 
             if self.step % 10 == 0:
+                # these are printing arrays but they really should be printing scalars
                 print(f"input: {It}, layer1: {preds_12}, layer2: {preds_23}")
 
 # i forgot how the shell works
