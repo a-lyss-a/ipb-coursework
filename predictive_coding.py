@@ -5,13 +5,13 @@ import argparse
 
 def main(args):
     myNetwork = Network()
-    myNetwork.forward(1000)
+    myNetwork.forward(args)
     
 
 class PEUnit:
     def __init__(self, r_size, I_size, alpha, beta, gamma, epsilon, zeta, eta, theta):
         
-        self.r = np.zeros((r_size))
+        self.r = np.zeros((r_size, 1))
         self.U = np.random.rand(I_size, r_size)
         self.V = np.random.rand(r_size, r_size)
         # Why is python like this... It takes different arguments to create x and U,
@@ -37,6 +37,7 @@ class PEUnit:
         # estimate of the last value of true r (r' or r-dash)
         # this is now self.r so i don't need to calculate it so many times
         # est_r = np.matmul(self.V, self.r) # this should be passed through a nonlinearity
+
         # error from bottom-up
         err_bu = I - np.matmul(self.U, self.r) #1x1
         # r-hat post-Kalman filter
@@ -46,17 +47,17 @@ class PEUnit:
                  - self.gamma * self.r)
 
         # transition matrix from previous timestep to now
-        new_V = self.V + self.epsilon * np.matmul( (r_hat - self.r), r_hat.T ) - self.eta
+        new_V = self.V + self.epsilon * np.matmul( (r_hat - self.r), r_hat.T ) - self.eta * self.V
         # weights; i'm not sure why we give this r-hat rather than r', just that they do in the paper
-        new_U = self.U + self.zeta * ( (I - np.matmul(self.U, r_hat)) * r_hat.T ) - self.theta
+        new_U = self.U + self.zeta * ( (I - np.matmul(self.U, r_hat)) * r_hat.T ) - self.theta * self.U
 
-        self.r = np.matmul(self.V, r_hat) # we should still probably pass this through a nonlinearity
+        self.r = np.tanh( np.matmul(self.V, r_hat) )
         self.V = new_V
         self.U = new_U
 
         print("U =",self.U) # this is printing a 5x5 matrix. why?
         # I don't know... It should be 1x5, I haven't run the code but the math should be right.
-        # I'd be currios what the dimensions of r_hat is because it might be a vector and might be a 5x1 matrix.
+        # I'd be curious what the dimensions of r_hat is because it might be a vector and might be a 5x1 matrix.
         # If it's a vector then it might cause issues? 
         print("V =",self.V)
         print("r =",self.r)
@@ -116,4 +117,4 @@ class Network:
                 print(f"input: {It}, layer1: {preds_12}, layer2: {preds_23}")
 
 # i forgot how the shell works
-main(1)
+main(200)
