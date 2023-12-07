@@ -78,11 +78,14 @@ class Network:
         # noise generator
         self.noise = np.random.default_rng()
         # define the units and their outputs
-        self.layer1 = [PEUnit(5, 1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)]
-        self.layer2 = [PEUnit(5, 1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)]
+        self.layer1 = [PEUnit(5, 1, 0.5, 0.5, 0.001, 0.1, 0.1, 0.1, 0.1)]
+        self.layer2 = [PEUnit(5, 1, 0.5, 0.5, 0.001, 0.1, 0.1, 0.1, 0.1)]
 
-    def generate_input(self):
-        return np.sin(self.step) + self.noise.normal(scale=0.05)
+    def generate_input(self, out_type = 0):
+        if(out_type == 0): out = np.sin(self.step) + self.noise.normal(scale=0.05)
+        if(out_type == 1): out = np.sin(self.step)    
+        if(out_type == 2): out = 0.5
+        return out
     
     # this is stacked right now because i haven't thought hard enough about the hierarchy
     def forward(self, steps):
@@ -94,27 +97,27 @@ class Network:
         errs_32 = [0]
         preds_23 = [0]
         while self.step < steps:
-            
+            print("Step:", self.step, "~~~~~~~~LAYER 1~~~~~~~~")
+
             # if r(t) = [0] then i guess our first real r is 1
             self.step += 1
 
             # generate input ( imagine this is I(t) )
-            It = self.generate_input()
+            It = self.generate_input(out_type= 2)
 
             # update everything and put the predictions into an array
             for i in range(len(self.layer1)):
                 preds_12[i], _ = self.layer1[i].update(It, errs_21[i])
 
             # ideally, you wouldn't be doing this step-by-step, but i guess this works for now
-            print("layer 2")
+            print("~~~~~~~~LAYER 2~~~~~~~~")
 
             # hand predictions up and errors down
             for i in range(len(self.layer2)):
                 preds_23[i], errs_21[i] = self.layer2[i].update(preds_12[i], errs_32[i])
-
             if self.step % 10 == 0:
                 # these are printing arrays but they really should be printing scalars
                 print(f"input: {It}, layer1: {preds_12}, layer2: {preds_23}")
 
 # i forgot how the shell works
-main(200)
+main(20)

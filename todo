@@ -1,3 +1,9 @@
 fix the structure so that all layers run simultaneously
 fix the nodes so that they can fit in a hierarchy
 test
+
+add noise to r'
+
+try more layers?
+try hierarchy
+try just tuning the bunch of learning rates?
