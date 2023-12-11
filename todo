@@ -7,3 +7,6 @@ add noise to r'
 try more layers?
 try hierarchy
 try just tuning the bunch of learning rates?
+
+reasons why it wouldn't work: 
+step size, noise too big for input signal - currently it's still whacky for constant input so no
