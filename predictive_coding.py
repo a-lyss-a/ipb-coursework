@@ -27,8 +27,8 @@ class PEUnit:
         # noise generator
         self.noise = np.random.default_rng()
 
-    # Update r, V, U based on a new input I
     def update(self, I, err_td):
+        "Update r, V, U based on a new input I"
 
         # error from bottom-up
         err_bu = I - np.matmul(self.U, self.r) #1x1
@@ -55,13 +55,13 @@ class PEUnit:
         # we need to output predictions to hand forwards, errors to hand backwards
         return self.predict(), err_bu
     
-    # generate a prediction
     def predict(self):
+        "generate a prediction"
         return np.matmul(self.U, self.r)
 
-        
-# for arranging and running the network
+
 class Network:
+    "for arranging and running the network"
     def __init__(self):
         self.step = 0
 
